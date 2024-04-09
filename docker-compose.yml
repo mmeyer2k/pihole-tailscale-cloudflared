@@ -1,0 +1,63 @@
+version: "3.7"
+
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    network_mode: service:tailscale
+    depends_on:
+      - cloudflare
+      - tailscale
+    environment:
+      TZ: America/Chicago
+      WEBPASSWORD: passw0rd
+      PIHOLE_DNS_: 127.0.0.1#5353;::1#5353
+      DNSMASQ_LISTENING: all
+      WEBLOGS_STDOUT: 1
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+      - 'ramdisk:/var/log/pihole'
+    logging: &logging
+      driver: "json-file"
+      options:
+        max-size: "5k"
+        max-file: "1"
+    
+  cloudflare:
+    image: visibilityspots/cloudflared
+    container_name: cloudflare
+    restart: unless-stopped
+    network_mode: service:tailscale
+    logging: *logging
+    depends_on:
+      - tailscale
+    environment:
+      PORT: 5353
+      UPSTREAM1: https://1.1.1.1/dns-query
+      UPSTREAM2: https://1.0.0.1/dns-query
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    restart: unless-stopped
+    hostname: tailscale
+    logging: *logging
+    environment:
+      - TS_AUTHKEY=tskey-client-notAReal-OAuthClientSecret1Atawk
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_HOSTNAME=pihole
+    volumes:
+      - ${PWD}/tailscale/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+
+volumes:
+  ramdisk:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
