@@ -14,9 +14,9 @@ services:
       DNSMASQ_LISTENING: all
       WEBLOGS_STDOUT: 1
     volumes:
-      - './etc-pihole:/etc/pihole'
-      - './etc-dnsmasq.d:/etc/dnsmasq.d'
-      - 'ramdisk:/var/log/pihole'
+      - "./etc-pihole:/etc/pihole"
+      - "./etc-dnsmasq.d:/etc/dnsmasq.d"
+      - "ramdisk:/var/log/pihole"
     logging: &logging
       driver: "json-file"
       options:
@@ -48,8 +48,8 @@ services:
       - TS_USERSPACE=false
       - TS_HOSTNAME=pihole
     volumes:
-      - ${PWD}/tailscale/state:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
+      - "${PWD}/tailscale/state:/var/lib/tailscale"
+      - "/dev/net/tun:/dev/net/tun"
     cap_add:
       - net_admin
       - sys_module
